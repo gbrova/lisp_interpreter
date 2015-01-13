@@ -20,7 +20,7 @@ class Interpreter:
         # Include the match as part of the resulting list
         expr_tokens = re.split('([ ()])', expr)
         for token in expr_tokens:
-            if len(token) == 0 or token == ' ':
+            if len(token) == 0 or token == ' ' or token == '\n':
                 continue
             if token == '(':
                 # TODO: also keep track of a parens stack (e.g. to identify mismatches)
@@ -32,22 +32,18 @@ class Interpreter:
                 obj_stack[-1].append(token)
         return obj_stack[0]
 
-    #TODO: check if this implementation is correct
-    #For example, what's the right behavior for is_atom('+')
     def is_atom(self, parse_tree):
-        #TODO: len==1 is wrong. For example, 123 should be an atom
-        if not isinstance(parse_tree, (list, tuple)) and parse_tree in self.func_table:
-            return False
-
-        if len(parse_tree) == 1 and not isinstance(parse_tree[0], (list, tuple)):
-            return True
-        else:
-            return False
+        return not isinstance(parse_tree, (list, tuple))
 
     #TODO: how to handle single lists?
     def evaluate(self, parse_tree):
         if self.is_atom(parse_tree):
-            return parse_tree[0]
+            value = parse_tree
+            try:
+                int(value)
+                return int(value)
+            except ValueError:
+                return self.func_table[value]
         fn = parse_tree[0]
         if fn == 'cons':
             return [parse_tree[1]] + parse_tree[2]
@@ -72,31 +68,13 @@ class Interpreter:
                     del self.func_table[value_name]
                 return result
             return cur_fn
-        """
-        if fn[0] == 'lambda':
-            value_names = fn[1]
-            lambda_fn = fn[2]
-            values = parse_tree[1:]
-
-            #add values to dictionary
-            for (value_name, value) in zip(value_names, values):
-                self.func_table[value_name] = lambda none: self.evaluate(value)
-            result = self.evaluate(lambda_fn)
-
-            #clean up dictionary
-            for value_name in value_names:
-                del self.func_table[value_name]
-            return result
-
-            operation = parse_tree[2]
-        """
 
         #handle anonymous functions specially, since they won't appear in self.func_table
         if fn[0] == 'lambda':
             args = [self.evaluate(x) for x in parse_tree[1:]]
             return self.evaluate(parse_tree[0]) (args)
         if fn not in self.func_table:
-            #print fn
+#            print fn
             #TODO: this is hacky, just to get lists to work without '. Remove later. 
             return parse_tree
         else:
@@ -151,7 +129,7 @@ class TestParse(unittest.TestCase):
         interpreter = Interpreter()
         tree = interpreter.parse('(car (1 2 3))')
         result = interpreter.evaluate(tree[0])
-        self.assertEquals('1', result)
+        self.assertEquals(1, result)
 
     def test_cdr(self):
         interpreter = Interpreter()
@@ -171,7 +149,7 @@ class TestParse(unittest.TestCase):
         interpreter = Interpreter()
         tree = interpreter.parse('(define a 5)')
         interpreter.evaluate(tree[0])
-        self.assertEquals(interpreter.evaluate(interpreter.parse('a')[0]), '5')
+        self.assertEquals(interpreter.evaluate(interpreter.parse('a')[0]), 5)
         self.assertEquals(interpreter.evaluate(interpreter.parse('(+ a 2)')[0]), 7)
 
         interpreter.evaluate(interpreter.parse('(define b (+ a 1))')[0])
@@ -180,15 +158,30 @@ class TestParse(unittest.TestCase):
         self.assertEquals(interpreter.evaluate(interpreter.parse('(+ a b)')[0]), 11)
 
 
+
     def test_lambda(self):
         interpreter = Interpreter()
         tree = interpreter.parse('((lambda (x) (* x x)) 4)')
         self.assertEquals(16, interpreter.evaluate(tree[0]))
 
+        # test it in the context of define
         tree = interpreter.parse('(define square (lambda (x) (* x x)))')
         interpreter.evaluate(tree[0])
         self.assertEquals(25, interpreter.evaluate(interpreter.parse('(square 5)')[0]))
-    
+
+        # test function with multiple args
+        tree = interpreter.parse('(define add (lambda (x y) (+ x y)))')
+        interpreter.evaluate(tree[0])
+        self.assertEquals(11, interpreter.evaluate(interpreter.parse('(add 5 6)')[0]))
+
+        # more complex example
+        code = "(define divides_evenly? (lambda (x y) (eq? (* x (/ y x)) (+ y 0))))"
+        tree = interpreter.parse(code)
+        interpreter.evaluate(tree[0])
+        self.assertFalse(interpreter.evaluate(interpreter.parse('(divides_evenly? 6 13)')[0]))
+        self.assertTrue(interpreter.evaluate(interpreter.parse('(divides_evenly? 6 12)')[0]))
+
+        
     def test_cond(self):
         pass
 
