@@ -55,6 +55,13 @@ class Interpreter:
             #TODO should we evaluate here?
             eval_sublist = self.evaluate(parse_tree[1])
             return eval_sublist[1:]
+        if fn == 'cond':
+            #evaluate each condition until one is True (using Python's comparison)
+            for (cond, val_if_true) in parse_tree[1:]:
+                if cond == 'else':
+                    return self.evaluate(val_if_true)
+                if self.evaluate(cond):
+                    return self.evaluate(val_if_true)
         if fn == 'define':
             value = self.evaluate(parse_tree[2])
             self.func_table[parse_tree[1]] = value 
@@ -194,8 +201,12 @@ class TestParse(unittest.TestCase):
         self.assertEquals("['1', '2', '3']", interpreter.evaluate(tree[0]))
 
     def test_cond(self):
-        # TODO implement
-        pass
+        interpreter = Interpreter()
+        tree = interpreter.parse('(cond ((eq? 1 2) 1) ((eq? 2 2) 2) (else 3))')
+        self.assertEquals(2, interpreter.evaluate(tree[0]))
+
+        tree = interpreter.parse('(cond ((eq? 1 2) 1) ((eq? 1 2) 2) (else 3))')
+        self.assertEquals(3, interpreter.evaluate(tree[0]))
 
 if __name__ == '__main__':
     unittest.main()
