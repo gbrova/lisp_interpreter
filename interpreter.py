@@ -35,7 +35,6 @@ class Interpreter:
     def is_atom(self, parse_tree):
         return not isinstance(parse_tree, (list, tuple))
 
-    #TODO: how to handle single lists?
     def evaluate(self, parse_tree):
         if self.is_atom(parse_tree):
             value = parse_tree
@@ -45,6 +44,9 @@ class Interpreter:
             except ValueError:
                 return self.func_table[value]
         fn = parse_tree[0]
+        if fn == 'quote':
+            # TODO this isn't quite right, because the syntax might have changed somewhat
+            return ' '.join([str(item) for item in parse_tree[1:]])
         if fn == 'cons':
             return [parse_tree[1]] + parse_tree[2]
         if fn == 'car':
@@ -181,8 +183,18 @@ class TestParse(unittest.TestCase):
         self.assertFalse(interpreter.evaluate(interpreter.parse('(divides_evenly? 6 13)')[0]))
         self.assertTrue(interpreter.evaluate(interpreter.parse('(divides_evenly? 6 12)')[0]))
 
-        
+
+    def test_quote(self):
+        interpreter = Interpreter()
+        tree = interpreter.parse('(quote a)')
+        self.assertEquals('a', interpreter.evaluate(tree[0]))
+
+        # TODO this might not be the desired behavior
+        tree = interpreter.parse('(quote (1 2 3))')
+        self.assertEquals("['1', '2', '3']", interpreter.evaluate(tree[0]))
+
     def test_cond(self):
+        # TODO implement
         pass
 
 if __name__ == '__main__':
