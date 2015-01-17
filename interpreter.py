@@ -18,7 +18,7 @@ class Interpreter:
         
         # Split on the characters space, (, and ).
         # Include the match as part of the resulting list
-        expr_tokens = re.split('([ ()])', expr)
+        expr_tokens = re.split('([ \'()])', expr)
         for token in expr_tokens:
             if len(token) == 0 or token == ' ' or token == '\n':
                 continue
@@ -45,14 +45,13 @@ class Interpreter:
                 return self.func_table[value]
         fn = parse_tree[0]
         if fn == 'quote':
-            # TODO this isn't quite right, because the syntax might have changed somewhat
+            # TODO this isn't quite right, because the syntax might be changed somewhat
             return ' '.join([str(item) for item in parse_tree[1:]])
         if fn == 'cons':
             return [parse_tree[1]] + parse_tree[2]
         if fn == 'car':
             return self.evaluate(parse_tree[1][0])
         if fn == 'cdr':
-            #TODO should we evaluate here?
             eval_sublist = self.evaluate(parse_tree[1])
             return eval_sublist[1:]
         if fn == 'cond':
@@ -83,7 +82,6 @@ class Interpreter:
             args = [self.evaluate(x) for x in parse_tree[1:]]
             return self.evaluate(parse_tree[0]) (args)
         if fn not in self.func_table:
-#            print fn
             #TODO: this is hacky, just to get lists to work without '. Remove later. 
             return parse_tree
         else:
@@ -98,7 +96,7 @@ class Interpreter:
 
 
 import unittest
-class TestParse(unittest.TestCase):
+class TestInterpreter(unittest.TestCase):
     def test_parse(self):
         interpreter = Interpreter()
         result = interpreter.parse('(+ 1 (- 1 2))')
@@ -210,9 +208,4 @@ class TestParse(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-    interpreter = Interpreter()
-    tree = interpreter.parse('(+ 1 1)')
-    print interpreter.evaluate(tree[0])
     
