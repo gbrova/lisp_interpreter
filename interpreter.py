@@ -92,19 +92,19 @@ class LispInterpreter:
             #func = self.evaluate(parse_tree[0])
             func = parse_tree[0]
             return self.evaluate(func) (args)
-#        if fn not in self.func_table:
+        if fn not in self.func_table:
 #            print 'shouldnt be here', parse_tree
             #TODO: this is hacky, just to get lists to work without '. Remove later. 
-#            return parse_tree
+            return parse_tree
 
         else:
             # apply function to everything else in the list
             args = [self.evaluate(x) for x in parse_tree[1:]]
             cur_symbol = self.evaluate(self.func_table[parse_tree[0]])
             if callable(cur_symbol):
-                return self.evaluate(cur_symbol(args))
+                return cur_symbol(args)
             else:
-                return self.evaluate(cur_symbol)
+                return cur_symbol
 
 
 def repl(prompt):
@@ -122,14 +122,3 @@ def repl(prompt):
 if __name__ == '__main__':
     repl('mylisp> ')
 
-"""
-to test: 
-(define fact (lambda (x) (if (eq? x 1) (1) else (* x (fact (- x 1))) ))
-
-
-#recursion
-(define test (lambda (x) (cond ((eq? x 1) 1) (else (test (- x 1))))))
-
-(define sumall (lambda (x) (cond ((eq? x 0) 0) (else (+ x (sumall (- x 1)) )))))
-"""
-    

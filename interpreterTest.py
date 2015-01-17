@@ -120,5 +120,10 @@ class TestInterpreter(unittest.TestCase):
         tree = interpreter.parse('(sumall 10)')
         self.assertEquals(55, interpreter.evaluate(tree[0]))
 
+        tree = interpreter.parse('(define fact (lambda (x) (cond ((eq? x 1) 1) (else (* x (fact (- x 1)))))))')
+        interpreter.evaluate(tree[0])
+        tree = interpreter.parse('(fact 10)')
+        self.assertEquals(3628800, interpreter.evaluate(tree[0]))
+
 if __name__ == '__main__':
     unittest.main()
