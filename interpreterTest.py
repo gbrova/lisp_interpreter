@@ -43,6 +43,7 @@ class TestInterpreter(unittest.TestCase):
         result = interpreter.evaluate(tree[0])
         self.assertEquals(1, result)
 
+    """
     def test_cdr(self):
         interpreter = LispInterpreter.LispInterpreter()
         tree = interpreter.parse('(cdr (1 2 3))')
@@ -56,7 +57,8 @@ class TestInterpreter(unittest.TestCase):
         tree = interpreter.parse('(cdr (cdr (cdr (1 2 3))))')
         result = interpreter.evaluate(tree[0])
         self.assertEquals([], result)
-
+    """
+    
     def test_define(self):
         interpreter = LispInterpreter.LispInterpreter()
         tree = interpreter.parse('(define a 5)')
@@ -111,7 +113,12 @@ class TestInterpreter(unittest.TestCase):
         tree = interpreter.parse('(cond ((eq? 1 2) 1) ((eq? 1 2) 2) (else 3))')
         self.assertEquals(3, interpreter.evaluate(tree[0]))
 
-
+    def test_recursion(self):
+        interpreter = LispInterpreter.LispInterpreter()
+        tree = interpreter.parse('(define sumall (lambda (x) (cond ((eq? x 0) 0) (else (+ x (sumall (- x 1)) )))))')
+        interpreter.evaluate(tree[0])
+        tree = interpreter.parse('(sumall 10)')
+        self.assertEquals(55, interpreter.evaluate(tree[0]))
 
 if __name__ == '__main__':
     unittest.main()
